@@ -10,16 +10,15 @@ void interpret(long receiveMsg);
 
 void setup() {
   Transceiver::init();
-  // Serial.println("<< PC 2 >>");
-  radio.setFrequency(99.9);
   pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+  radio.setFrequency(99.7);
+  // Serial.println("<< PC 2 >>");
 }
 
 int cnt = 0;
 
 void loop() {
-  digitalWrite(13, LOW);
-
   // long receive = 0;
   // while (!receiveFrameDAC(&receive, 8, 500)) {
   // }
@@ -29,15 +28,22 @@ void loop() {
   //   Serial.print(" ");
   // }
   // Serial.println((char)receive);
-  // delay(500);
-  // sendFrameDAC(('A' + cnt++%26), 8);
+  // long send = ('A' + cnt++ % 26);
+  // delay(1000);
+  // Serial.println((char)send);
+  // sendFrameDAC(send, 8);
   // Serial.println("<< START RECEIVE >>");
   long receiveMsg = startReceive();
-  // Serial.print("Received Msg: ");
-  // for (int i = 7; i >= 0; --i) {
-  //   Serial.print((receiveMsg >> i) & 1);
+  // long receiveMsg = 0;
+  // if (receiveFrameDAC(&receiveMsg, 8, 500)) {
+  //   Serial.print("Received Msg: ");
+  //   for (int i = 7; i >= 0; --i) {
+  //     Serial.print((receiveMsg >> i) & 1);
+  //   }
+  //   Serial.print("   ");
+  //   Serial.println((char)receiveMsg);
   // }
-  // Serial.println();
+  
   delay(300);
   interpret(receiveMsg);
   delay(300);
@@ -53,7 +59,7 @@ void interpret(long receiveMsg) {
     while (byteCount < 2) {
       if (Serial.available()) {
         int tmp = Serial.read();
-        Serial.write(tmp);
+        // Serial.write(tmp);
         sendMsg += tmp;
         ++byteCount;
         if (byteCount < 2)
@@ -65,9 +71,9 @@ void interpret(long receiveMsg) {
     if (command == 2)
       Serial.write('l');
     else if (command == 3)
-      Serial.write('r');
-    else if (command == 4)
       Serial.write('c');
+    else if (command == 4)
+      Serial.write('r');
     for (int dot = 0; dot < 16; ++dot) {
       Serial.write('q');
       delay(10);
@@ -84,6 +90,7 @@ void interpret(long receiveMsg) {
           }
         }
         startSend(sendMsg);
+        // Serial.println("COMPLETE");
       }
     }
   }
