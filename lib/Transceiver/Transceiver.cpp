@@ -11,14 +11,14 @@
 
 // Send & Receive Parameters
 Adafruit_MCP4725 dac;
-const int RxPin = A0;
+const int RxPin = A1;
 const int freq[4] = {200, 300, 400, 500};
 int delayFreq[4];
 const int sample = 4;
 int zeta[sample];
 uint16_t S_DAC[sample];
 const int baudRate = 100;
-const int baudTime = 9500;
+const int baudTime = 9700;
 int cycle[4];
 
 void Transceiver::init() {
@@ -79,7 +79,7 @@ void sendFrameDAC(long bits, int length) {
   //   Serial.print((bits >> i) & 1);
   // }
   // Serial.println();
-  dac.setVoltage(0, false);
+  dac.setVoltage(S_DAC[0], false);
   for (int i = length - 2; i >= 0; i -= 2) {
     const int level = ((bits >> i) & 3);
     delay(3);
@@ -89,12 +89,13 @@ void sendFrameDAC(long bits, int length) {
         delayMicroseconds(delayFreq[level & 3]);
       }
     }
-    dac.setVoltage(0, false);
+    dac.setVoltage(S_DAC[0], false);
   }
 }
+
 bool receiveFrameDAC(long *receivedBit, int numBit,
                      unsigned int timeoutMillis) {
-  const int r_slope = 100;
+  const int r_slope = 150;
   int bitCount = 0;
   int prevReading = analogRead(RxPin);
   unsigned long startTime = micros();
@@ -107,14 +108,16 @@ bool receiveFrameDAC(long *receivedBit, int numBit,
   while (bitCount < numBit) {
     const int reading = analogRead(RxPin);
     if (millis() - functionInvokeTimeStamp > timeoutMillis && !startReading) {
+      // Serial.println("Not Receive");
       return false;
     }
-    if (startReading && millis() - lastBitTimeStamp > 100) {
-      *receivedBit = 1;
+    if (startReading && millis() - lastBitTimeStamp > 300) {
+      *receivedBit = 3;
+      // Serial.println("Timeout");
       return false;
     }
     if (reading - prevReading > r_slope && !check) { // rising signal
-      max = 0;
+      max = reading;
       startReading = true;
       if (cycleCount == 0) {
         startTime = micros();
