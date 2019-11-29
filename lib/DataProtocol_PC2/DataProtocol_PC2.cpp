@@ -7,32 +7,20 @@ void PC_2::startSend(long data) {
   ACKStatus status;
   do {
     long bits = PC_2::makeFrame(1, sendFrameCount, data);
-    // Serial.println("Sending...");
     sendFrameDAC(bits, 16);
     status = PC_2::waitingForACK();
   } while (status != ACKStatus::R);
 
   PC_2::sendFrameCount = (sendFrameCount + 1) % 2;
   delay(100);
-  // Serial.println("Sending Session Completed");
 }
 
 long PC_2::startReceive() {
   long receive = 0;
   bool isReceived = false;
-  // Serial.println("Waiting for Frame...");
   while (!isReceived) {
     receive = 0;
-    // long elapse = millis();
     isReceived = receiveFrameDAC(&receive, 8, 500);
-    // if(!isReceived && receive == 1){
-    //   Serial.println("Partial");
-    //   continue;
-    // }
-    // for(int i = 7;i >= 0;--i){
-    //   Serial.print((receive >> i) & 1);
-    // }
-    // Serial.println();
     delayMicroseconds(300000);
     bool crc = checkCRC(receive, 8);
     bool crc2 = crc;
@@ -52,7 +40,6 @@ long PC_2::startReceive() {
       if (crc) {
         receiveFrameCount = (receiveFrameCount + 1) % 2;
         while (isReceived) {
-          // Serial.println("ACK");
           delay(200);
           PC_2::sendACK();
           long tmp = 0;
@@ -65,7 +52,6 @@ long PC_2::startReceive() {
         return receive;
       } else {
         receive = 0;
-        // Serial.println("Incorrect Data, Frame Discarded");
         isReceived = false;
       }
     } else
@@ -73,48 +59,6 @@ long PC_2::startReceive() {
   }
   return receive;
 }
-
-// long PC_2::startReceive(){
-//   bool isReceive = false;
-//   long receiveMsg = 0;
-//   while (!isReceive) {
-//     // Serial.println(".");
-//     isReceive = receiveFrameDAC(&receiveMsg, 8, 500);
-//     if (isReceive) {
-//       Serial.print("Received");
-//       for(int i = 7;i >= 0;--i){
-//         Serial.print((receiveMsg >> i) & 1);
-//       }
-//       Serial.println("");
-//       bool crc = checkCRC(receiveMsg, 8);
-//       Serial.println(crc);
-//       if (crc) {
-//         const int frameNo = (receiveMsg >> 4) & 1;
-//         const int command = (receiveMsg >> 5) & 7;
-//         if (frameNo != receiveFrameCount) {
-//           sendACK(); // ACK for last frame
-//           isReceive = false;
-//         } else {
-//           if(command != 0){
-//             receiveFrameCount = (receiveFrameCount + 1) % 2;
-//             bool noACK = true;
-//             while(noACK){
-//               sendACK();
-//               long tmp = 0;
-//               bool rec = receiveFrameDAC(&tmp,8,1000);
-//               Serial.println(rec);
-//               if(rec && ((receiveMsg >> 4) & 1) != receiveFrameCount) noACK =
-//               true; else noACK = false;
-//             }
-//             break;
-//           }
-//         }
-//       }
-//     }
-
-//   }
-//   return receiveMsg;
-// }
 
 void PC_2::sendACK() {
   long bits = PC_2::makeFrame(0, receiveFrameCount, 0);

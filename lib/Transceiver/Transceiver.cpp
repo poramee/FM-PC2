@@ -2,13 +2,6 @@
 #include <Adafruit_MCP4725.h>
 #include <Wire.h>
 
-// #ifndef cbi
-// #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
-// #endif
-// #ifndef sbi
-// #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
-// #endif
-
 // Send & Receive Parameters
 Adafruit_MCP4725 dac;
 const int RxPin = A1;
@@ -22,25 +15,15 @@ const int baudTime = 9700;
 int cycle[4];
 
 void Transceiver::init() {
-  // sbi(ADCSRA, ADPS2); // this for increase analogRead Speed cbi(ADCSRA,ADPS1) ;
-  // cbi(ADCSRA, ADPS0);
   
   Serial.begin(115200);
-  // Serial.println("delay     cycle");
   for (int i = 0; i < 4; ++i) {
     delayFreq[i] = ((1000000 / freq[i]) / sample) - 147;
     cycle[i] = freq[i] / baudRate;
-    // Serial.print(delayFreq[i]);
-    // Serial.print("  ");
-    // Serial.println(cycle[i]);
   }
-  // Serial.println("i   S_DAC");
   for (int i = 0; i < sample; ++i) {
     zeta[i] = ((double)(i) / sample) * 360;
     S_DAC[i] = map(sin(zeta[i] * PI / 180) * 1000, -1000, 1000, 0, 3000);
-    // Serial.print(i);
-    // Serial.print("   ");
-    // Serial.println(S_DAC[i]);
   }
   dac.begin(0x64);
   dac.setVoltage(0, false);
@@ -73,12 +56,6 @@ int generateCRC(long data, int length) {
   return bits;
 }
 void sendFrameDAC(long bits, int length) {
-  // possible length value are 8 and 22
-  // Serial.print("sendFrameDAC:");
-  // for (int i = length - 1; i >= 0; --i) {
-  //   Serial.print((bits >> i) & 1);
-  // }
-  // Serial.println();
   dac.setVoltage(S_DAC[0], false);
   for (int i = length - 2; i >= 0; i -= 2) {
     const int level = ((bits >> i) & 3);

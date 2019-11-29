@@ -13,22 +13,11 @@ void setup() {
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
   radio.setFrequency(107.7);
-  // radio.setFrequency(107.0);
-  // Serial.println("<< PC 2 >>");
 }
 
 int cnt = 0;
 
 void loop() {
-  // long receiveMsg = 0;
-  // if (receiveFrameDAC(&receiveMsg, 8, 500)) {
-  //   Serial.print("Received Msg: ");
-  //   for (int i = 7; i >= 0; --i) {
-  //     Serial.print((receiveMsg >> i) & 1);
-  //   }
-  //   Serial.print("   ");
-  //   Serial.println((char)receiveMsg);
-  // }
   long receiveMsg = startReceive();
   delay(300);
   interpret(receiveMsg);
@@ -41,13 +30,12 @@ void interpret(long receiveMsg) {
     Serial.write('s');
     long sendMsg = 0;
     int byteCount = 0;
-    // Serial.println("Waiting");
+
     while (byteCount < 2) {
       long tmp = 0;
       if(receiveFrameDAC(&tmp,8,1000)) sendACK();
       if (Serial.available()) {
         int tmp = Serial.read();
-        // Serial.write(tmp);
         sendMsg += tmp;
         ++byteCount;
         if (byteCount < 2)
@@ -81,7 +69,6 @@ void interpret(long receiveMsg) {
           }
         }
         startSend(sendMsg);
-        // Serial.println("COMPLETE");
       }
     }
   }
